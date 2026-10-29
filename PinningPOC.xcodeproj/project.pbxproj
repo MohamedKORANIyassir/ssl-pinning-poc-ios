@@ -1,0 +1,239 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B30000000000000000000000 /* PinningPOCApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50000000000000000000000 /* PinningPOCApp.swift */; };
+		B30000000000000000000001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50000000000000000000001 /* APIClient.swift */; };
+		B30000000000000000000002 /* Pinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50000000000000000000002 /* Pinning.swift */; };
+		B30000000000000000000006 /* PublicKeyPinningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F50000000000000000000006 /* PublicKeyPinningDelegate.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F20000000000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F20000000000000000000002 /* PinningPOC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PinningPOC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F40000000000000000000001 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		F50000000000000000000000 /* PinningPOCApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PinningPOCApp.swift; sourceTree = "<group>"; };
+		F50000000000000000000001 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		F50000000000000000000002 /* Pinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pinning.swift; sourceTree = "<group>"; };
+		F50000000000000000000006 /* PublicKeyPinningDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicKeyPinningDelegate.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C10000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D10000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				F40000000000000000000001 /* README.md */,
+				D10000000000000000000002 /* PinningPOC */,
+				D10000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D10000000000000000000002 /* PinningPOC */ = {
+			isa = PBXGroup;
+			children = (
+				D20000000000000000000001 /* App */,
+				D20000000000000000000002 /* Networking */,
+				F20000000000000000000001 /* Info.plist */,
+			);
+			path = PinningPOC;
+			sourceTree = "<group>";
+		};
+		D10000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F20000000000000000000002 /* PinningPOC.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D20000000000000000000001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F50000000000000000000000 /* PinningPOCApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D20000000000000000000002 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				F50000000000000000000001 /* APIClient.swift */,
+				F50000000000000000000002 /* Pinning.swift */,
+				F50000000000000000000006 /* PublicKeyPinningDelegate.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E10000000000000000000001 /* PinningPOC */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 910000000000000000000002 /* Build configuration list for PBXNativeTarget "PinningPOC" */;
+			buildPhases = (
+				C10000000000000000000002 /* Sources */,
+				C10000000000000000000001 /* Frameworks */,
+				C10000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PinningPOC;
+			productName = PinningPOC;
+			productReference = F20000000000000000000002 /* PinningPOC.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		810000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = 910000000000000000000001 /* Build configuration list for PBXProject "PinningPOC" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D10000000000000000000001;
+			productRefGroup = D10000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E10000000000000000000001 /* PinningPOC */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C10000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C10000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B30000000000000000000000 /* PinningPOCApp.swift in Sources */,
+				B30000000000000000000001 /* APIClient.swift in Sources */,
+				B30000000000000000000002 /* Pinning.swift in Sources */,
+				B30000000000000000000006 /* PublicKeyPinningDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A10000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				ENABLE_TESTABILITY = YES;
+			};
+			name = Debug;
+		};
+		A10000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A10000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PinningPOC/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Pinning POC";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yassir.PinningPOC;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A10000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PinningPOC/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Pinning POC";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yassir.PinningPOC;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		910000000000000000000001 /* Build configuration list for PBXProject "PinningPOC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000001 /* Debug */,
+				A10000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		910000000000000000000002 /* Build configuration list for PBXNativeTarget "PinningPOC" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000003 /* Debug */,
+				A10000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 810000000000000000000001 /* Project object */;
+}
