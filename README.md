@@ -111,9 +111,21 @@ Use the **key** when you want to look at what the server actually sends, for exa
 
 Switch to Scenario B: in `APIClient.swift`, change `makeDelegate()` to return `PublicKeyPinningDelegate()`.
 
-## Demo
+## Demo videos
 
-1. Debug opt-in ON, tap GET /users: users load.
-2. Proxyman with SSL Proxying on `api.github.com`: "Secure connection failed". Proxyman sees only the hostname.
-3. Remote switch ON: works through Proxyman.
-4. Everything off: works.
+Both videos run the same test with Proxyman intercepting `api.github.com`:
+pinning blocks the request, and Proxyman shows "Possible Certificate Pinning" (it only sees the hostname).
+
+### Pinning by pin (hash): `PinningDelegate`
+https://github.com/user-attachments/assets/85128db9-8adf-4b5e-bccb-992aa1d42381
+
+
+
+### Pinning by key: `PublicKeyPinningDelegate`
+https://github.com/user-attachments/assets/bb6e98c7-0df6-47e8-881c-ccce7dfcc01e
+
+
+
+
+
+
