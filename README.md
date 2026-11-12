@@ -66,24 +66,30 @@ They only differ in whether we hash those bytes.
 Run in Terminal with Proxyman off. The server doesn't send the root, so the commands first find the root's
 name in the server's chain, then take that root from the Mac's trust store.
 
-Paste the **whole block at once, in one Terminal window**: steps 2a and 2b use `$ROOT` from the lines above
-them, and it is empty in a new window.
+Run all steps **in the same Terminal window**: steps 2a and 2b use `$ROOT` from step 1, and it is empty in a new window.
+
+**1. Find the root's name** (the last issuer, `i:`, in the chain the server sends). It must print a name:
 
 ```sh
 H=api.github.com
-# 1. The root's name: the last issuer (i:) in the chain the server sends
 ROOT=$(openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null \
   | grep -E "^ *i:" | tail -1 | sed -E 's/.*CN ?= ?//')
-echo "Root: [$ROOT]"   # must show a name; if empty, see below
+echo "Root: [$ROOT]"
+```
 
-# 2a. Pin (Scenario A): paste into Pinning.pins
+**2a. The pin** (Scenario A): paste into `Pinning.pins`
+
+```sh
 security find-certificate -c "$ROOT" -p /System/Library/Keychains/SystemRootCertificates.keychain \
   | openssl x509 -pubkey -noout \
   | openssl pkey -pubin -outform der \
   | openssl dgst -sha256 -binary \
   | openssl enc -base64
+```
 
-# 2b. Key (Scenario B): paste into Pinning.publicKeys
+**2b. The key** (Scenario B): paste into `Pinning.publicKeys`
+
+```sh
 security find-certificate -c "$ROOT" -p /System/Library/Keychains/SystemRootCertificates.keychain \
   | openssl x509 -pubkey -noout \
   | grep -v "PUBLIC KEY" \
@@ -92,12 +98,12 @@ security find-certificate -c "$ROOT" -p /System/Library/Keychains/SystemRootCert
 
 If `security` says *"The specified item could not be found in the keychain"*:
 
-1. `Root:` is empty: the block wasn't run in one go. Paste it again, all at once.
-2. `Root:` shows a name: print the chain to see the exact name, then put it in `ROOT` by hand:
+1. `Root:` is empty: step 1 wasn't run in this window. Run it again first.
+2. `Root:` shows a name: print the chain to see the exact name, then put the last `i:` name in `ROOT` by hand:
 
    ```sh
    openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null | grep -E "^ *[0-9]+ s:|^ *i:"
-   ROOT="USERTrust ECC Certification Authority"   # the last i: name from the output above
+   ROOT="USERTrust ECC Certification Authority"
    ```
 
 GitHub's roots today:
