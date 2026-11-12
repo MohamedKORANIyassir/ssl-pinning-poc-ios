@@ -66,6 +66,9 @@ They only differ in whether we hash those bytes.
 Run in Terminal with Proxyman off. The server doesn't send the root, so the commands first find the root's
 name in the server's chain, then take that root from the Mac's trust store.
 
+Paste the **whole block at once, in one Terminal window**: steps 2a and 2b use `$ROOT` and `$KC` from the lines
+above them, and those are empty in a new window.
+
 ```sh
 H=api.github.com
 KC=/System/Library/Keychains/SystemRootCertificates.keychain
@@ -73,7 +76,7 @@ KC=/System/Library/Keychains/SystemRootCertificates.keychain
 # 1. The root's name: the last issuer (i:) in the chain the server sends
 ROOT=$(openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null \
   | grep -E "^ *i:" | tail -1 | sed -E 's/.*CN ?= ?//')
-echo "Root: $ROOT"
+echo "Root: [$ROOT]"   # must show a name; if empty, see below
 
 # 2a. Pin (Scenario A): paste into Pinning.pins
 security find-certificate -c "$ROOT" -p $KC \
@@ -89,8 +92,15 @@ security find-certificate -c "$ROOT" -p $KC \
   | tr -d '\n'; echo
 ```
 
-If `Root:` is empty or `security` can't find the certificate, print the chain to see the exact name:
-`openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null | grep -E "^ *[0-9]+ s:|^ *i:"`
+If `security` says *"The specified item could not be found in the keychain"*:
+
+1. `Root:` is empty: the block wasn't run in one go. Paste it again, all at once.
+2. `Root:` shows a name: print the chain to see the exact name, then put it in `ROOT` by hand:
+
+   ```sh
+   openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null | grep -E "^ *[0-9]+ s:|^ *i:"
+   ROOT="USERTrust ECC Certification Authority"   # the last i: name from the output above
+   ```
 
 GitHub's roots today:
 
