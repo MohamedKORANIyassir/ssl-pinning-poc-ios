@@ -14,10 +14,25 @@ Demo for the RFC "SSL Pinning for Yassir POS". One call: `GET https://api.github
 During the TLS handshake iOS asks the pinning delegate (`PinningDelegate` or `PublicKeyPinningDelegate`) whether to trust the server:
 
 1. Normal certificate check (trusted CA, hostname, dates).
-2. Pin check: SHA-256 of the server's public key must be one of our 2 pins (primary + backup).
+2. Pin check: SHA-256 of the **root CA's** public key (the last certificate in the chain) must be one of our pins.
 
 If either fails, the handshake is cancelled: **no request data is sent**, the app shows
 "Secure connection failed. Check your network or update the app." and never retries without pinning.
+
+## Root pinning, not leaf
+
+The server's chain is `[server certificate (leaf), intermediate CA, root CA]`. This POC pins the **root CA**, the last one.
+
+| | Leaf pinning | Root pinning (this POC) |
+|---|---|---|
+| What's pinned | The server's own key | The key of the CA at the top of the chain |
+| When the server renews or changes its key | Pin breaks; needs an app update or the backup pin | Nothing changes (roots last 10-20+ years) |
+| Blocks Proxyman, MDM/malware CAs, other CAs | Yes | Yes |
+| A certificate from the **same** CA for our name, obtained by someone else | Blocked | Passes (needs control of our domain) |
+
+GitHub's chain can end at either of two roots, so both are pinned: they also act as each other's backup.
+The root isn't sent by the server; iOS adds it from the phone's trust store, which is why the pin check runs
+**after** `SecTrustEvaluateWithError`.
 
 ## On / off
 
@@ -33,59 +48,73 @@ The remote switch can only turn pinning off. It never sends pins; pins change on
 
 Two classes, one per way: `PinningDelegate` (Scenario A, hash, used by default) and `PublicKeyPinningDelegate` (Scenario B, the key itself).
 
-Both start from the **same bytes**: the server's public key in the standard format (SPKI = "key type" header + key).
+Both start from the **same bytes**: the root CA's public key in the standard format (SPKI = "key type" header + key).
 They only differ in whether we hash those bytes.
 
 | | Scenario A: hash of the key (active) | Scenario B: the key itself |
 |---|---|---|
-| What's stored in the app | `P5437A6f5e2OnunPOzNhRV2iWeOE1XGTN9xskQ53yTk=` | `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7TUu…+uLLsw==` |
-| Length | Always 44 characters | 124 (EC P-256) to ~730 (RSA 4096) characters |
+| What's stored in the app | `sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=` | `MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEdvqZ…/usZzkOj` |
+| Length | Always 44 characters | 160 (EC P-384) to ~730 (RSA 4096) characters |
 | Security | Same | Same (a public key is public; the secret is the server's private key, which is never involved) |
 | Same format as Android OkHttp / `cert-pins.sh` / RFC | ✅ | ❌ |
 | Swift | `PinningDelegate`: `SHA256(spki).base64` | `PublicKeyPinningDelegate`: `spki.base64` |
 
 **Recommendation:** Scenario A. Scenario B is useful to see and compare the actual key.
 
-### Get the pin (Scenario A)
+### Get the root's pin and key
 
-Run in Terminal with Proxyman off. Prints one line: paste it into `Pinning.pins`.
+Run in Terminal with Proxyman off. The server doesn't send the root, so the commands first find the root's
+name in the server's chain, then take that root from the Mac's trust store.
 
 ```sh
 H=api.github.com
-openssl s_client -connect $H:443 -servername $H </dev/null 2>/dev/null \
+KC=/System/Library/Keychains/SystemRootCertificates.keychain
+
+# 1. The root's name: the last issuer (i:) in the chain the server sends
+ROOT=$(openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null \
+  | grep -E "^ *i:" | tail -1 | sed -E 's/.*CN ?= ?//')
+echo "Root: $ROOT"
+
+# 2a. Pin (Scenario A): paste into Pinning.pins
+security find-certificate -c "$ROOT" -p $KC \
   | openssl x509 -pubkey -noout \
   | openssl pkey -pubin -outform der \
   | openssl dgst -sha256 -binary \
   | openssl enc -base64
-```
 
-Output today: `P5437A6f5e2OnunPOzNhRV2iWeOE1XGTN9xskQ53yTk=`
-
-### Get the key (Scenario B)
-
-Run in Terminal with Proxyman off. Prints one line: paste it into `Pinning.publicKeys`.
-
-```sh
-H=api.github.com
-openssl s_client -connect $H:443 -servername $H </dev/null 2>/dev/null \
+# 2b. Key (Scenario B): paste into Pinning.publicKeys
+security find-certificate -c "$ROOT" -p $KC \
   | openssl x509 -pubkey -noout \
   | grep -v "PUBLIC KEY" \
   | tr -d '\n'; echo
 ```
 
-Output today: `MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7TUu/xntlsqbuo3fCl5jpydyrTHZDZGQSllJri0v9y5MnKIAECGAWfjt4Nuv2JOnsqefiwtvazzP7U6o+uLLsw==`
+If `Root:` is empty or `security` can't find the certificate, print the chain to see the exact name:
+`openssl s_client -connect $H:443 -servername $H -showcerts </dev/null 2>/dev/null | grep -E "^ *[0-9]+ s:|^ *i:"`
+
+GitHub's roots today:
+
+| Root | Key type | Valid until | Pin |
+|---|---|---|---|
+| Sectigo Public Server Authentication Root E46 | EC P-384 | 2046 | `sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=` |
+| USERTrust ECC Certification Authority | EC P-384 | 2038 | `ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=` |
 
 What each step does:
 
 | Step | Pin | Key |
 |---|---|---|
-| `openssl s_client …` | Connects to the server and gets its certificate | same |
+| `openssl s_client … -showcerts \| grep … \| sed …` | Finds the root's name (last issuer in the chain) | same |
+| `security find-certificate -c "$ROOT" -p` | Gets the root certificate from the Mac's trust store | same |
 | `openssl x509 -pubkey -noout` | Takes the public key out of the certificate (multi-line text with BEGIN/END) | same |
 | `openssl pkey -pubin -outform der` | Turns it into raw bytes | — |
 | `openssl dgst -sha256 -binary` | Hashes the bytes with SHA-256 | — |
 | `openssl enc -base64` | Writes the hash as text (44 characters) | — |
 | `grep -v "PUBLIC KEY"` | — | Removes the BEGIN/END lines |
 | `tr -d '\n'; echo` | — | Joins the lines into one |
+
+To pin the **leaf** instead (the server's own key), the same pipelines start with
+`openssl s_client -connect $H:443 -servername $H </dev/null 2>/dev/null` instead of `security find-certificate …`,
+and the code uses `.first` instead of `.last`.
 
 ### Working with the key vs working with the pin
 

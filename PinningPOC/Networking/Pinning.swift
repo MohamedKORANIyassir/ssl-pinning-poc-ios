@@ -6,16 +6,21 @@ import os
 enum Pinning {
     static let host = "api.github.com"
 
-    /// Used by `PinningDelegate`: SHA-256 hash of the server's public key, Base64.
+    /// Root pinning: we pin the root CA at the end of the server's chain, not the server's own (leaf) key.
+    /// The root survives the server's renewals and key changes. GitHub's chain can end at either root below.
+
+    /// Used by `PinningDelegate`: SHA-256 hash of the root CA's public key, Base64.
     static let pins: Set<String> = [
-        "P5437A6f5e2OnunPOzNhRV2iWeOE1XGTN9xskQ53yTk=", // primary
-        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=", // backup (dummy)
+        "sLVjNUaFYfW7n6EtgBeEpjOlcnBdNPMrZDRF36iwBdE=", // Sectigo Public Server Authentication Root E46 (EC P-384, until 2046)
+        "ICGRfpgmOUXIWcQ/HXPLQTkFPEFPoDyjvH7ohhQpjzs=", // USERTrust ECC Certification Authority (EC P-384, until 2038)
     ]
 
-    /// Used by `PublicKeyPinningDelegate`: the server's public key itself, Base64.
+    /// Used by `PublicKeyPinningDelegate`: the root CA's public key itself, Base64.
     static let publicKeys: Set<String> = [
-        "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7TUu/xntlsqbuo3fCl5jpydyrTHZDZGQSllJri0v9y5MnKIAECGAWfjt4Nuv2JOnsqefiwtvazzP7U6o+uLLsw==", // primary
-        "DUMMY_BACKUP_PUBLIC_KEY", // backup (dummy)
+        // Sectigo Public Server Authentication Root E46
+        "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEdvqZqW4g7fnXd+MHO6jbPV846KtVplZP1kjq7H8tqsOyxXnsmWF/EHnHAlr5BDf1NDUrd85/II9SowCJ7NWnom1b40uSk6CA9QGU3PBoBx7N7v4lUrUgQxwb/usZzkOj",
+        // USERTrust ECC Certification Authority
+        "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEGqxUWqn5aCPnetUkb1PGWthLq8bVttHmc3Gu3ZzWDGH926CJA7gFFOxXzu5dP+Ihs8731Ip54KODfi2X0GHE8ZncJZFjq38wo7Rw4sehM5zzvy5cU7Ffs30yf4o043l5",
     ]
 
     /// Release: always on, unless the remote switch turns it off. Debug: off unless opted in.
@@ -34,7 +39,7 @@ enum Pinning {
     }
 }
 
-/// Pinning by hash: the SHA-256 of the server's public key must be in `Pinning.pins`.
+/// Pinning by hash: the SHA-256 of the root CA's public key must be in `Pinning.pins`.
 /// iOS calls it during the TLS handshake, before any request data is sent.
 final class PinningDelegate: NSObject, URLSessionDelegate {
     func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge)
@@ -46,7 +51,7 @@ final class PinningDelegate: NSObject, URLSessionDelegate {
         // 1. Normal certificate check (trusted CA, hostname, dates). Always runs.
         guard SecTrustEvaluateWithError(trust, nil) else { return (.cancelAuthenticationChallenge, nil) }
 
-        // 2. Pin check: the hash of the server's public key must be one of our pins.
+        // 2. Pin check: the hash of the root CA's public key must be one of our pins.
         if Pinning.isEnabled, !Pinning.pins.contains(publicKeyHash(trust) ?? "") {
             Logger().error("pinning_failure domain=\(Pinning.host, privacy: .public)")
             return (.cancelAuthenticationChallenge, nil) // handshake stops: nothing is sent
@@ -54,13 +59,18 @@ final class PinningDelegate: NSObject, URLSessionDelegate {
         return (.useCredential, URLCredential(trust: trust))
     }
 
-    /// Base64(SHA-256(public key)) of the server's certificate: the same value as the openssl pin command.
+    /// Base64(SHA-256(public key)) of the root CA certificate: the same value as the openssl root pin command.
+    /// Supports EC P-256 and P-384 keys (GitHub's roots are P-384). For any other key type (e.g. RSA) it returns nil,
+    /// so every request is rejected: add support for the backend's key type before using it there.
     private func publicKeyHash(_ trust: SecTrust) -> String? {
-        guard let certificate = (SecTrustCopyCertificateChain(trust) as? [SecCertificate])?.first,
+        // The chain iOS verified is [server certificate, intermediate CA, root CA]; `.last` is the root.
+        // The root comes from the phone's trust store, so this must run after SecTrustEvaluateWithError.
+        guard let certificate = (SecTrustCopyCertificateChain(trust) as? [SecCertificate])?.last,
               let key = SecCertificateCopyKey(certificate),
               let rawKey = SecKeyCopyExternalRepresentation(key, nil) as Data?,
-              // iOS returns the bare key; CryptoKit adds the "EC P-256 key" header to get the standard format.
-              let publicKey = try? P256.Signing.PublicKey(x963Representation: rawKey).derRepresentation
+              // iOS returns the bare key; CryptoKit adds the "EC key + curve" header to get the standard format.
+              let publicKey = (try? P256.Signing.PublicKey(x963Representation: rawKey).derRepresentation)
+                           ?? (try? P384.Signing.PublicKey(x963Representation: rawKey).derRepresentation)
         else { return nil }
         return Data(SHA256.hash(data: publicKey)).base64EncodedString()
     }
